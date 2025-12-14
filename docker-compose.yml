@@ -1,1 +1,77 @@
 ﻿
+
+services:
+  # Auth Service
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    ports:
+      - "8001:8001"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DEBUG=1
+    volumes:
+      - ./auth-service:/app
+    networks:
+      - microservices-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Task Service
+  task-service:
+    build: ./task-service
+    container_name: task-service
+    ports:
+      - "8002:8002"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DEBUG=1
+    volumes:
+      - ./task-service:/app
+    networks:
+      - microservices-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Дополнительный сервис для тестирования (опционально)
+  test-client:
+    image: alpine/curl
+    container_name: test-client
+    networks:
+      - microservices-network
+    depends_on:
+      - auth-service
+      - task-service
+    command: >
+      sh -c "
+      echo 'Testing services...' &&
+      echo 'Waiting for services to start...' &&
+      sleep 10 &&
+      echo 'Testing Auth Service:' &&
+      curl -f http://auth-service:8001/health &&
+      echo '' &&
+      echo 'Testing Task Service:' &&
+      curl -f http://task-service:8002/health &&
+      echo '' &&
+      echo 'All tests passed!' &&
+      exit 0
+      "
+
+networks:
+  microservices-network:
+    driver: bridge
+    name: microservices-network
+
+volumes:
+  auth-data:
+  task-data:
