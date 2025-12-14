@@ -15,7 +15,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY . .
 
 # Открываем порт
-EXPOSE 8002
+EXPOSE 8001
 
 # Команда для запуска сервиса
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8002", "--reload"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001", "--reload"]
